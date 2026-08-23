@@ -5,7 +5,7 @@ from flask_login import LoginManager, current_user, login_user, login_required, 
 from database.restaurant_db import db, FoodItem, User
 
 app = Flask(__name__)
-app.config["SECRET_KEY"] = "4815030a019b690c80146c93ccbba37544504242f7e019f21be6622a7eefff55"
+app.config["SECRET_KEY"] = "secret-key"
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + os.path.join(
