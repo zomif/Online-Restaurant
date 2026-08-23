@@ -1,10 +1,72 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends "base.html" %}
 
-</body>
-</html>
+{% block title %}Welcome - Online Restaurant{% endblock %}
+
+{% block content %}
+<div style="max-width: 1200px; margin: 0 auto; padding: 1rem 1rem 3rem 1rem;">
+
+    <div style="background: linear-gradient(135deg, rgba(255,153,0,0.2) 0%, rgba(40,167,69,0.2) 100%), rgba(255, 255, 255, 0.07); backdrop-filter: blur(8px); border-radius: 12px; padding: 4rem 2rem; text-align: center; margin-bottom: 3rem; box-shadow: 0 4px 20px rgba(0,0,0,0.15); border: 1px solid rgba(255, 255, 255, 0.1);">
+        <h1 style="font-size: 3rem; margin: 0 0 1rem 0; font-weight: 800; letter-spacing: -1px;">
+            Welcome to <span style="color: #ff9900;">Tasty Bytes</span> 🍔
+        </h1>
+        <p style="font-size: 1.25rem; max-width: 650px; margin: 0 auto 2rem auto; color: #ddd; line-height: 1.6;">
+            Craving something delicious? Freshly prepared gourmet burgers, handcrafted pizzas, and artisan meals delivered hot right to your doorstep.
+        </p>
+        <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+            <a href="{{ url_for('food.menu') }}" style="background: #ff9900; color: white; padding: 14px 28px; text-decoration: none; border-radius: 30px; font-size: 1.1rem; font-weight: bold; box-shadow: 0 4px 12px rgba(255,153,0,0.3); transition: transform 0.2s;">
+                📖 Explore Full Menu
+            </a>
+            <a href="{{ url_for('food_orders.cart') }}" style="background: rgba(255,255,255,0.15); color: white; padding: 14px 28px; text-decoration: none; border-radius: 30px; font-size: 1.1rem; font-weight: bold; backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.2);">
+                🛒 View Cart
+            </a>
+        </div>
+    </div>
+
+    <div style="display: flex; gap: 20px; justify-content: space-between; flex-wrap: wrap; margin-bottom: 4rem;">
+        <div style="flex: 1; min-width: 250px; background: rgba(255, 255, 255, 0.05); padding: 1.5rem; border-radius: 10px; text-align: center;">
+            <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">⚡</div>
+            <h3 style="margin: 0 0 0.5rem 0;">Fast Delivery</h3>
+            <p style="color: #aaa; margin: 0; font-size: 0.95rem;">Hot and fresh food delivered to your door in 30 minutes or less.</p>
+        </div>
+        <div style="flex: 1; min-width: 250px; background: rgba(255, 255, 255, 0.05); padding: 1.5rem; border-radius: 10px; text-align: center;">
+            <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🥗</div>
+            <h3 style="margin: 0 0 0.5rem 0;">Fresh Ingredients</h3>
+            <p style="color: #aaa; margin: 0; font-size: 0.95rem;">We source locally everyday to ensure highest quality meals.</p>
+        </div>
+        <div style="flex: 1; min-width: 250px; background: rgba(255, 255, 255, 0.05); padding: 1.5rem; border-radius: 10px; text-align: center;">
+            <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">⭐</div>
+            <h3 style="margin: 0 0 0.5rem 0;">Top Rated Chefs</h3>
+            <p style="color: #aaa; margin: 0; font-size: 0.95rem;">Crafted with passion by experienced culinary specialists.</p>
+        </div>
+    </div>
+
+    {% if items %}
+        <div style="margin-top: 2rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h2 style="margin: 0;">Popular Choices</h2>
+                <a href="{{ url_for('food.menu') }}" style="color: #ff9900; text-decoration: none; font-weight: bold;">See All →</a>
+            </div>
+
+            <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                {% for item in items[:4] %}
+                    <div style="padding: 15px; border-radius: 8px; width: 250px; background: rgba(255, 255, 255, 0.07); backdrop-filter: blur(5px); display: flex; flex-direction: column; justify-content: space-between;">
+                        <div>
+                            {% if item.image_url %}
+                                <img src="{{ item.image_url }}" alt="{{ item.name }}" style="width: 100%; height: 150px; object-fit: cover; border-radius: 6px; margin-bottom: 10px;">
+                            {% endif %}
+                            <h3 style="margin: 0 0 5px 0; font-size: 1.1rem;">{{ item.name }}</h3>
+                            <p style="font-size: 1rem; font-weight: bold; color: #28a745; margin-bottom: 10px;">${{ "%.2f"|format(item.price) }}</p>
+                        </div>
+                        <form action="{{ url_for('food_orders.add_to_cart', food_id=item.id) }}" method="POST">
+                            <button type="submit" style="width: 100%; padding: 8px; background: #ff9900; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
+                                🛒 Add to Cart
+                            </button>
+                        </form>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
+</div>
+{% endblock %}
