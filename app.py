@@ -229,7 +229,7 @@ def checkout():
     session["cart"] = {}
     session.modified = True
     flash("🎉 Order placed successfully! Thank you for your purchase.", "success")
-    return redirect(url_for("index"))
+    return redirect(url_for("main.index"))
 
 @ai.route("/assistant")
 def assistant():
