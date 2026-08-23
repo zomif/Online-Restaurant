@@ -1,10 +1,33 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends "base.html" %}
 
-</body>
-</html>
+{% block title %}Menu - Online Restaurant{% endblock %}
+
+{% block content %}
+<div style="max-width: 1200px; margin: 2rem auto; padding: 0 1rem;">
+    <h2>Menu</h2>
+
+    <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+        {% for item in items %}
+            <div style="padding: 15px; border-radius: 8px; width: 260px; background: rgba(255, 255, 255, 0.07); backdrop-filter: blur(5px); box-shadow: 0 2px 6px rgba(0,0,0,0.05); display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    {% if item.image_url %}
+                        <img src="{{ item.image_url }}" alt="{{ item.name }}" style="width: 100%; height: 160px; object-fit: cover; border-radius: 6px; margin-bottom: 10px;">
+                    {% endif %}
+                    <h3 style="margin: 0 0 5px 0;">{{ item.name }}</h3>
+                    <p style="color: #888; font-size: 0.9rem; margin-bottom: 5px;"><strong>Category:</strong> {{ item.category }}</p>
+                    <p style="font-size: 0.95rem; margin-bottom: 10px;">{{ item.description }}</p>
+                    <p style="font-size: 1.1rem; font-weight: bold; color: #28a745; margin-bottom: 10px;">${{ "%.2f"|format(item.price) }}</p>
+                </div>
+
+                <form action="{{ url_for('food_orders.add_to_cart', food_id=item.id) }}" method="POST">
+                    <button type="submit" style="width: 100%; padding: 10px; background: #ff9900; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">
+                        🛒 Add to Cart
+                    </button>
+                </form>
+            </div>
+        {% else %}
+            <p>No food items found on the menu.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
