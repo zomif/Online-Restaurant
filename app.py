@@ -1,10 +1,11 @@
 import os
+from datetime import timedelta
 from flask import Flask, render_template, Blueprint, redirect, url_for, request, flash, session
 from flask_login import LoginManager, current_user, login_user, login_required, logout_user
 from database.restaurant_db import db, FoodItem, User
 
 app = Flask(__name__)
-app.config["SECRET_KEY"] = "secret-key"
+app.config["SECRET_KEY"] = "4815030a019b690c80146c93ccbba37544504242f7e019f21be6622a7eefff55"
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + os.path.join(
@@ -41,6 +42,9 @@ def login():
         email = request.form.get("email")
         password = request.form.get("password")
         user = User.query.filter_by(email=email).first()
+
+        session.permanent = True
+        login_user(user, remember=True)
 
         if not user or not user.check_password(password):
             flash("Invalid email or password.", "danger")
@@ -90,6 +94,10 @@ def logout():
 @auth.route("/profile")
 def profile():
     return "Profile page - coming soon"
+
+@auth.route('/policy')
+def policy():
+    return render_template('auth/policy.html')
 
 @food.route("/menu")
 def menu():
