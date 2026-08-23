@@ -33,7 +33,7 @@ admin = Blueprint("admin", __name__, url_prefix="/admin")
 @main.route("/")
 def index():
     items = FoodItem.query.all()
-    return render_template("food/menu.html", items=items)
+    return render_template("main/index.html", items=items)
 
 @auth.route("/login", methods=["GET", "POST"])
 def login():
