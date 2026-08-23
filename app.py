@@ -1,15 +1,12 @@
 import os
 from flask import Flask, render_template, Blueprint, redirect, url_for, request, flash, session
-from flask_login import LoginManager, current_user, login_user ,login_required, logout_user
+from flask_login import LoginManager, current_user, login_user, login_required, logout_user
 from database.restaurant_db import db, FoodItem, User
 
-
 app = Flask(__name__)
-
 app.config["SECRET_KEY"] = "secret-key"
 
 basedir = os.path.abspath(os.path.dirname(__file__))
-
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + os.path.join(
     basedir, "database", "restaurant.db"
 )
@@ -25,63 +22,24 @@ login_manager.login_view = "auth.login"
 def load_user(user_id):
     return db.session.get(User, int(user_id))
 
-
 main = Blueprint("main", __name__)
-food_order = Blueprint('food_orders', __name__)
-
-@food_order.route("/cart")
-def cart():
-    return render_template("cart/cart.html")
-
-@food_order.route("/cart/add/<int:food_id>", methods=["POST"])
-@login_required
-def add_to_cart(food_id):
-    food = db.session.get(FoodItem, food_id)
-    if not food:
-        flash("Item not found.", "danger")
-        return redirect(url_for("food.menu"))
-
-    cart = session.get("cart", {})
-    str_id = str(food_id)
-    cart[str_id] = cart.get(str_id, 0) + 1
-
-    session["cart"] = cart
-    session.modified = True
-    flash(f"Added {food.name} to cart!", "success")
-    return redirect(url_for("food.menu"))
-
-@app.route("/cart/remove/<int:food_id>", methods=["POST"])
-def remove_from_cart(food_id):
-    cart = session.get("cart", {})
-    str_id = str(food_id)
-    if str_id in cart:
-        del cart[str_id]
-        session["cart"] = cart
-        session.modified = True
-        flash("Item removed from cart.", "info")
-    return redirect(url_for("orders.cart"))
-
-
-@app.route("/cart/clear", methods=["POST"])
-def clear_cart():
-    session.pop("cart", None)
-    flash("Cart cleared.", "info")
-    return redirect(url_for("orders.cart"))
+auth = Blueprint("auth", __name__, url_prefix="/auth")
+food = Blueprint("food", __name__, url_prefix="/food")
+delivery = Blueprint("delivery", __name__, url_prefix="/delivery")
+orders = Blueprint("orders", __name__, url_prefix="/orders")
+ai = Blueprint("ai", __name__, url_prefix="/ai")
+admin = Blueprint("admin", __name__, url_prefix="/admin")
 
 @main.route("/")
 def index():
     items = FoodItem.query.all()
-    return render_template("main/index.html", items=items)
-
-
-auth = Blueprint("auth", __name__, url_prefix="/auth")
+    return render_template("food/menu.html", items=items)
 
 @auth.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
         email = request.form.get("email")
         password = request.form.get("password")
-
         user = User.query.filter_by(email=email).first()
 
         if not user or not user.check_password(password):
@@ -93,7 +51,6 @@ def login():
         return redirect(url_for("main.index"))
 
     return render_template("auth/login.html")
-
 
 @auth.route("/register", methods=["GET", "POST"])
 def register():
@@ -123,7 +80,6 @@ def register():
 
     return render_template("auth/register.html")
 
-
 @auth.route("/logout")
 @login_required
 def logout():
@@ -131,20 +87,14 @@ def logout():
     flash("You have been logged out.", "info")
     return redirect(url_for("main.index"))
 
-
 @auth.route("/profile")
 def profile():
     return "Profile page - coming soon"
-
-
-food = Blueprint("food", __name__, url_prefix="/food")
-
 
 @food.route("/menu")
 def menu():
     items = FoodItem.query.all()
     return render_template("food/menu.html", items=items)
-
 
 @food.route("/add_food", methods=["GET", "POST"])
 def add_food():
@@ -167,10 +117,8 @@ def add_food():
         flash(f"Added '{name}' successfully!", "success")
         return redirect(url_for("food.add_food"))
 
-
     items = FoodItem.query.all()
     return render_template("food/food.html", items=items)
-
 
 @food.route("/food/delete/<int:food_id>", methods=["POST"])
 def delete_food(food_id):
@@ -181,21 +129,13 @@ def delete_food(food_id):
         flash(f"Deleted '{food_item.name}' successfully!", "info")
     return redirect(url_for("food.add_food"))
 
-delivery = Blueprint("delivery", __name__, url_prefix="/delivery")
-
-
 @delivery.route("/")
 def delivery_page():
     return "Delivery page - coming soon"
 
-
-orders = Blueprint("orders", __name__, url_prefix="/orders")
-
-
 @orders.route("/history")
 def history():
     return "Order history - coming soon"
-
 
 @orders.route("/cart")
 @login_required
@@ -217,22 +157,87 @@ def cart():
 
     return render_template("cart/cart.html", items=cart_items, total=total_price)
 
+@orders.route("/cart/add/<int:food_id>", methods=["POST"])
+@login_required
+def add_to_cart(food_id):
+    food = db.session.get(FoodItem, food_id)
+    if not food:
+        flash("Item not found.", "danger")
+        return redirect(url_for("food.menu"))
 
-ai = Blueprint("ai", __name__, url_prefix="/ai")
+    cart = session.get("cart", {})
+    str_id = str(food_id)
+    current_qty = cart.get(str_id, 0)
 
+    if current_qty >= 10:
+        flash("Maximum limit of 10 items per product reached!", "warning")
+    else:
+        cart[str_id] = current_qty + 1
+        session["cart"] = cart
+        session.modified = True
+        flash(f"Added {food.name} to cart!", "success")
+
+    return redirect(url_for("food.menu"))
+
+@orders.route("/cart/update/<int:food_id>", methods=["POST"])
+@login_required
+def update_cart(food_id):
+    cart = session.get("cart", {})
+    str_id = str(food_id)
+    new_qty = int(request.form.get("quantity", 1))
+
+    if new_qty < 1:
+        new_qty = 1
+    elif new_qty > 10:
+        new_qty = 10
+        flash("Maximum limit is 10 items per product.", "warning")
+
+    if str_id in cart:
+        cart[str_id] = new_qty
+        session["cart"] = cart
+        session.modified = True
+
+    return redirect(url_for("orders.cart"))
+
+@orders.route("/cart/remove/<int:food_id>", methods=["POST"])
+@login_required
+def remove_from_cart(food_id):
+    cart = session.get("cart", {})
+    str_id = str(food_id)
+    if str_id in cart:
+        del cart[str_id]
+        session["cart"] = cart
+        session.modified = True
+        flash("Item removed from cart.", "info")
+    return redirect(url_for("orders.cart"))
+
+@orders.route("/cart/clear", methods=["POST"])
+@login_required
+def clear_cart():
+    session.pop("cart", None)
+    flash("Cart cleared.", "info")
+    return redirect(url_for("orders.cart"))
+
+@orders.route("/cart/checkout", methods=["POST"])
+@login_required
+def checkout():
+    cart = session.get("cart", {})
+    if not cart:
+        flash("Your cart is empty!", "danger")
+        return redirect(url_for("orders.cart"))
+
+    session["cart"] = {}
+    session.modified = True
+    flash("🎉 Order placed successfully! Thank you for your purchase.", "success")
+    return redirect(url_for("index"))
 
 @ai.route("/assistant")
 def assistant():
     return "AI Assistant - coming soon"
 
-
-admin = Blueprint("admin", __name__, url_prefix="/admin")
-
-
 @admin.route("/")
 def dashboard():
     return "Admin dashboard - coming soon"
-
 
 app.register_blueprint(main)
 app.register_blueprint(auth)
@@ -241,7 +246,6 @@ app.register_blueprint(delivery)
 app.register_blueprint(orders)
 app.register_blueprint(ai)
 app.register_blueprint(admin)
-app.register_blueprint(food_order)
 
 with app.app_context():
     db.create_all()
