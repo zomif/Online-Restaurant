@@ -1,78 +1,55 @@
 {% extends "base.html" %}
 
-{% block title %}Shopping Cart - Online Restaurant{% endblock %}
+{% block title %}Your Cart - Online Restaurant{% endblock %}
 
 {% block content %}
-<div style="max-width: 900px; margin: 2rem auto; padding: 2rem; background: rgba(255, 255, 255, 0.07); backdrop-filter: blur(5px); border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-    <h2 style="border-bottom: 2px solid rgba(255, 255, 255, 0.2); padding-bottom: 0.5rem; margin-top: 0;">Your Shopping Cart</h2>
+<div style="max-width: 900px; margin: 2rem auto; padding: 0 1rem;">
+    <h2>Your Shopping Cart</h2>
 
     {% if items %}
-        <table style="width: 100%; border-collapse: collapse; margin-top: 1.5rem;">
-            <thead>
-                <tr style="border-bottom: 2px solid rgba(255, 255, 255, 0.2); text-align: left;">
-                    <th style="padding: 12px 10px;">Item</th>
-                    <th style="padding: 12px 10px;">Price</th>
-                    <th style="padding: 12px 10px;">Quantity</th>
-                    <th style="padding: 12px 10px;">Subtotal</th>
-                    <th style="padding: 12px 10px; text-align: center;">Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in items %}
-                    <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
-                        <td style="padding: 12px 10px; vertical-align: middle;">
-                            <div style="display: flex; align-items: center; gap: 15px;">
-                                {% if item.food.image_url %}
-                                    <img src="{{ item.food.image_url }}" alt="{{ item.food.name }}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                                {% else %}
-                                    <div style="width: 60px; height: 60px; background: rgba(255,255,255,0.1); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">🍽️</div>
-                                {% endif %}
-                                <div>
-                                    <strong style="font-size: 1.05rem;">{{ item.food.name }}</strong>
-                                    {% if item.food.category %}
-                                        <div style="font-size: 0.85rem; color: #888;">{{ item.food.category }}</div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </td>
-                        <td style="padding: 12px 10px; vertical-align: middle;">
-                            ${{ "%.2f"|format(item.food.price) }}
-                        </td>
-                        <td style="padding: 12px 10px; vertical-align: middle;">
-                            {{ item.quantity }}
-                        </td>
-                        <td style="padding: 12px 10px; vertical-align: middle; font-weight: bold;">
-                            ${{ "%.2f"|format(item.subtotal) }}
-                        </td>
-                        <td style="padding: 12px 10px; text-align: center; vertical-align: middle;">
-                            <form action="{{ url_for('remove_from_cart', food_id=item.food.id) }}" method="POST" style="margin: 0;">
-                                <button type="submit" style="background: #dc3545; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.85rem;">
-                                    Remove
-                                </button>
-                            </form>
-                        </td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        <div style="background: rgba(255, 255, 255, 0.07); backdrop-filter: blur(5px); padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem;">
+            {% for entry in items %}
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 1rem 0; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        {% if entry.food.image_url %}
+                            <img src="{{ entry.food.image_url }}" alt="{{ entry.food.name }}" style="width: 70px; height: 70px; object-fit: cover; border-radius: 6px;">
+                        {% endif %}
+                        <div>
+                            <h3 style="margin: 0 0 5px 0;">{{ entry.food.name }}</h3>
+                            <p style="margin: 0; color: #888;">${{ "%.2f"|format(entry.food.price) }} each</p>
+                        </div>
+                    </div>
 
-        <div style="margin-top: 2rem; display: flex; justify-content: space-between; align-items: center; border-top: 2px solid rgba(255, 255, 255, 0.2); padding-top: 1.5rem;">
-            <form action="{{ url_for('clear_cart') }}" method="POST" style="margin: 0;">
-                <button type="submit" style="background: #6c757d; color: white; border: none; padding: 10px 16px; border-radius: 4px; cursor: pointer;">
-                    Clear Cart
-                </button>
-            </form>
+                    <div style="display: flex; align-items: center; gap: 20px;">
+                        <form action="{{ url_for('orders.update_cart', food_id=entry.food.id) }}" method="POST" style="display: flex; align-items: center; gap: 5px;">
+                            <input type="number" name="quantity" value="{{ entry.quantity }}" min="1" max="10" onchange="this.form.submit()" style="width: 50px; padding: 6px; border-radius: 4px; border: 1px solid #ccc; text-align: center;">
+                        </form>
 
-            <div style="text-align: right;">
-                <h3 style="margin: 0 0 1rem 0; font-size: 1.4rem;">Total: <span style="color: #28a745;">${{ "%.2f"|format(total) }}</span></h3>
+                        <p style="margin: 0; font-weight: bold; width: 80px; text-align: right;">${{ "%.2f"|format(entry.subtotal) }}</p>
+
+                        <form action="{{ url_for('orders.remove_from_cart', food_id=entry.food.id) }}" method="POST">
+                            <button type="submit" style="background: #dc3545; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer;">
+                                🗑️
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            {% endfor %}
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem;">
+                <h3 style="margin: 0;">Total Amount: <span style="color: #28a745;">${{ "%.2f"|format(total) }}</span></h3>
+
+                <form action="{{ url_for('orders.checkout') }}" method="POST">
+                    <button type="submit" style="background: #28a745; color: white; border: none; padding: 14px 28px; border-radius: 6px; font-size: 1.1rem; font-weight: bold; cursor: pointer;">
+                        ✅ Complete Order
+                    </button>
+                </form>
             </div>
         </div>
     {% else %}
-        <div style="text-align: center; padding: 3rem 1rem;">
-            <p style="font-size: 1.2rem; margin-bottom: 1.5rem;">Your cart is currently empty.</p>
-            <a href="{{ url_for('food.menu') }}" style="display: inline-block; background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px;">
-                Browse Menu
-            </a>
+        <div style="text-align: center; padding: 3rem; background: rgba(255, 255, 255, 0.05); border-radius: 8px;">
+            <h3>Your cart is empty.</h3>
+            <a href="{{ url_for('main.index') }}" style="color: #ff9900; font-weight: bold; text-decoration: none;">Explore our menu to add food items!</a>
         </div>
     {% endif %}
 </div>
