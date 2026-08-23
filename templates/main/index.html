@@ -16,7 +16,7 @@
             <a href="{{ url_for('food.menu') }}" style="background: #ff9900; color: white; padding: 14px 28px; text-decoration: none; border-radius: 30px; font-size: 1.1rem; font-weight: bold; box-shadow: 0 4px 12px rgba(255,153,0,0.3); transition: transform 0.2s;">
                 📖 Explore Full Menu
             </a>
-            <a href="{{ url_for('food_orders.cart') }}" style="background: rgba(255,255,255,0.15); color: white; padding: 14px 28px; text-decoration: none; border-radius: 30px; font-size: 1.1rem; font-weight: bold; backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.2);">
+            <a href="{{ url_for('orders.cart') }}" style="background: rgba(255,255,255,0.15); color: white; padding: 14px 28px; text-decoration: none; border-radius: 30px; font-size: 1.1rem; font-weight: bold; backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.2);">
                 🛒 View Cart
             </a>
         </div>
@@ -57,7 +57,7 @@
                             <h3 style="margin: 0 0 5px 0; font-size: 1.1rem;">{{ item.name }}</h3>
                             <p style="font-size: 1rem; font-weight: bold; color: #28a745; margin-bottom: 10px;">${{ "%.2f"|format(item.price) }}</p>
                         </div>
-                        <form action="{{ url_for('food_orders.add_to_cart', food_id=item.id) }}" method="POST">
+                            <form action="{{ url_for('orders.add_to_cart', food_id=item.id) }}" method="POST">
                             <button type="submit" style="width: 100%; padding: 8px; background: #ff9900; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
                                 🛒 Add to Cart
                             </button>
