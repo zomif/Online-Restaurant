@@ -29,7 +29,12 @@ def load_user(user_id):
 main = Blueprint("main", __name__)
 food_order = Blueprint('food_orders', __name__)
 
+@food_order.route("/cart")
+def cart():
+    return render_template("cart/cart.html")
+
 @food_order.route("/cart/add/<int:food_id>", methods=["POST"])
+@login_required
 def add_to_cart(food_id):
     food = db.session.get(FoodItem, food_id)
     if not food:
@@ -65,7 +70,8 @@ def clear_cart():
 
 @main.route("/")
 def index():
-    return render_template("base.html")
+    items = FoodItem.query.all()
+    return render_template("main/index.html", items=items)
 
 
 auth = Blueprint("auth", __name__, url_prefix="/auth")
@@ -192,6 +198,7 @@ def history():
 
 
 @orders.route("/cart")
+@login_required
 def cart():
     cart_data = session.get("cart", {})
     cart_items = []
