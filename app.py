@@ -1,7 +1,8 @@
 import os
-from flask import Flask, render_template, Blueprint, redirect, url_for, request, flash
+from flask import Flask, render_template, Blueprint, redirect, url_for, request, flash, session
 from flask_login import LoginManager, current_user, login_user ,login_required, logout_user
 from database.restaurant_db import db, FoodItem, User
+
 
 app = Flask(__name__)
 
@@ -26,7 +27,41 @@ def load_user(user_id):
 
 
 main = Blueprint("main", __name__)
+food_order = Blueprint('food_orders', __name__)
 
+@food_order.route("/cart/add/<int:food_id>", methods=["POST"])
+def add_to_cart(food_id):
+    food = db.session.get(FoodItem, food_id)
+    if not food:
+        flash("Item not found.", "danger")
+        return redirect(url_for("food.menu"))
+
+    cart = session.get("cart", {})
+    str_id = str(food_id)
+    cart[str_id] = cart.get(str_id, 0) + 1
+
+    session["cart"] = cart
+    session.modified = True
+    flash(f"Added {food.name} to cart!", "success")
+    return redirect(url_for("food.menu"))
+
+@app.route("/cart/remove/<int:food_id>", methods=["POST"])
+def remove_from_cart(food_id):
+    cart = session.get("cart", {})
+    str_id = str(food_id)
+    if str_id in cart:
+        del cart[str_id]
+        session["cart"] = cart
+        session.modified = True
+        flash("Item removed from cart.", "info")
+    return redirect(url_for("orders.cart"))
+
+
+@app.route("/cart/clear", methods=["POST"])
+def clear_cart():
+    session.pop("cart", None)
+    flash("Cart cleared.", "info")
+    return redirect(url_for("orders.cart"))
 
 @main.route("/")
 def index():
@@ -105,28 +140,40 @@ def menu():
     return render_template("food/menu.html", items=items)
 
 
-@food.route("/add", methods=["GET", "POST"])
-@login_required
+@food.route("/add_food", methods=["GET", "POST"])
 def add_food():
-    if current_user.role != "admin":
-        flash("Access denied.", "danger")
-        return redirect(url_for("food.menu"))
-
     if request.method == "POST":
-        new_food = FoodItem(
-            name=request.form.get("name"),
-            description=request.form.get("description"),
-            price=float(request.form.get("price") or 0.0),
-            category=request.form.get("category"),
-            image_url=request.form.get("image_url")
+        name = request.form.get("name")
+        category = request.form.get("category")
+        price = float(request.form.get("price", 0))
+        description = request.form.get("description")
+        image_url = request.form.get("image_url")
+
+        new_item = FoodItem(
+            name=name,
+            category=category,
+            price=price,
+            description=description,
+            image_url=image_url
         )
-        db.session.add(new_food)
+        db.session.add(new_item)
         db.session.commit()
+        flash(f"Added '{name}' successfully!", "success")
+        return redirect(url_for("food.add_food"))
 
-        flash("Food item saved permanently!", "success")
-        return redirect(url_for("food.menu"))
 
-    return render_template("food/food.html")
+    items = FoodItem.query.all()
+    return render_template("food/food.html", items=items)
+
+
+@food.route("/food/delete/<int:food_id>", methods=["POST"])
+def delete_food(food_id):
+    food_item = db.session.get(FoodItem, food_id)
+    if food_item:
+        db.session.delete(food_item)
+        db.session.commit()
+        flash(f"Deleted '{food_item.name}' successfully!", "info")
+    return redirect(url_for("food.add_food"))
 
 delivery = Blueprint("delivery", __name__, url_prefix="/delivery")
 
@@ -144,9 +191,24 @@ def history():
     return "Order history - coming soon"
 
 
-@orders.route("/cart", methods=["GET", "POST"])
+@orders.route("/cart")
 def cart():
-    return "Cart page - coming soon"
+    cart_data = session.get("cart", {})
+    cart_items = []
+    total_price = 0.0
+
+    for food_id, quantity in cart_data.items():
+        food = db.session.get(FoodItem, int(food_id))
+        if food:
+            subtotal = food.price * quantity
+            total_price += subtotal
+            cart_items.append({
+                "food": food,
+                "quantity": quantity,
+                "subtotal": subtotal
+            })
+
+    return render_template("cart/cart.html", items=cart_items, total=total_price)
 
 
 ai = Blueprint("ai", __name__, url_prefix="/ai")
@@ -172,6 +234,7 @@ app.register_blueprint(delivery)
 app.register_blueprint(orders)
 app.register_blueprint(ai)
 app.register_blueprint(admin)
+app.register_blueprint(food_order)
 
 with app.app_context():
     db.create_all()
