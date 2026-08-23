@@ -19,7 +19,7 @@
                     <p style="font-size: 1.1rem; font-weight: bold; color: #28a745; margin-bottom: 10px;">${{ "%.2f"|format(item.price) }}</p>
                 </div>
 
-                <form action="{{ url_for('food_orders.add_to_cart', food_id=item.id) }}" method="POST">
+               <form action="{{ url_for('orders.add_to_cart', food_id=item.id) }}" method="POST">
                     <button type="submit" style="width: 100%; padding: 10px; background: #ff9900; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">
                         🛒 Add to Cart
                     </button>
