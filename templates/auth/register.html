@@ -145,7 +145,7 @@
             <p>Get started with your free account today</p>
         </div>
 
-        <form action="/register" method="POST">
+        <form action="{{ url_for('auth.register') }}" method="POST">
             <div class="form-group">
                 <label for="username">Full Name</label>
                 <input type="text" id="username" name="username" placeholder="John Doe" required>
