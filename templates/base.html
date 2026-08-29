@@ -1,87 +1,201 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Tasty Bytes{% endblock %}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    {% block extra_css %}{% endblock %}
+
+```
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>
+    {% block title %}Tasty Bytes{% endblock %}
+</title>
+
+<link
+    rel="stylesheet"
+    href="{{ url_for('static', filename='css/style.css') }}"
+>
+
+{% block extra_css %}{% endblock %}
+```
+
 </head>
+
 <body>
 
-    <header>
-        <nav class="navbar">
-            <a href="{{ url_for('main.index') }}" class="logo">
-                Tasty Bytes
+```
+<!-- NAVIGATION -->
+<header>
+    <nav class="navbar">
+
+        <a href="{{ url_for('main.index') }}" class="logo">
+            Tasty Bytes
+        </a>
+
+        <div class="nav-links">
+
+            <a href="{{ url_for('main.index') }}">
+                Home
             </a>
 
-            <div class="nav-links">
-                <a href="{{ url_for('main.index') }}">Home</a>
-                <a href="{{ url_for('food.menu') }}">Menu</a>
-                <a href="{{ url_for('delivery.delivery_page') }}">Delivery</a>
+            <a href="{{ url_for('food.menu') }}">
+                Menu
+            </a>
 
-                {% if current_user.is_authenticated %}
-                    <a href="{{ url_for('orders.history') }}">My Orders</a>
+            <a href="{{ url_for('delivery.delivery_page') }}">
+                Delivery
+            </a>
 
-                    {% if current_user.role == "admin" %}
-                        <a href="{{ url_for('food.add_food') }}">Add product</a>
-                    {% endif %}
 
-                    <a href="{{ url_for('ai.assistant') }}">AI Assistant</a>
-                    <a href="{{ url_for('orders.cart') }}">🛒 Cart</a>
-                    <a href="{{ url_for('auth.profile') }}">{{ current_user.username }}</a>
-                    <a href="{{ url_for('auth.logout') }}" class="logout">Logout</a>
-                {% else %}
-                    <a href="{{ url_for('auth.login') }}">Login</a>
-                    <a href="{{ url_for('auth.register') }}" class="register-button">Register</a>
+            {% if current_user.is_authenticated %}
+
+                <a href="{{ url_for('orders.history') }}">
+                    My Orders
+                </a>
+
+                {% if current_user.role == "admin" %}
+
+                    <a href="{{ url_for('food.add_food') }}">
+                        Add product
+                    </a>
+
                 {% endif %}
-            </div>
-        </nav>
-    </header>
 
-    <div class="flash-container">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="flash-message {{ category }}">
-                        {{ message }}
-                    </div>
-                {% endfor %}
+                <a href="{{ url_for('ai.assistant') }}">
+                    AI Assistant
+                </a>
+
+                <a href="{{ url_for('orders.cart') }}">
+                    🛒 Cart
+                </a>
+
+                <a href="{{ url_for('auth.profile') }}">
+                    {{ current_user.username }}
+                </a>
+
+                <a href="{{ url_for('auth.logout') }}" class="logout">
+                    Logout
+                </a>
+
+            {% else %}
+
+                <a href="{{ url_for('auth.login') }}">
+                    Login
+                </a>
+
+                <a href="{{ url_for('auth.register') }}" class="register-button">
+                    Register
+                </a>
+
             {% endif %}
-        {% endwith %}
+
+        </div>
+
+    </nav>
+</header>
+
+
+<!-- FLASH MESSAGES -->
+<div class="flash-container">
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+
+        {% if messages %}
+
+            {% for category, message in messages %}
+
+                <div class="flash-message {{ category }}">
+                    {{ message }}
+                </div>
+
+            {% endfor %}
+
+        {% endif %}
+
+    {% endwith %}
+
+</div>
+
+<!-- MAIN PAGE CONTENT -->
+<main>
+
+    {% block content %}
+    {% endblock %}
+
+</main>
+
+
+<!-- FOOTER -->
+<footer>
+
+    <div class="footer-container">
+
+        <div class="footer-section">
+
+            <h3>Tasty Bytes</h3>
+
+            <p>
+                Delicious food with one click.
+            </p>
+
+        </div>
+
+
+        <div class="footer-section">
+
+            <h3>Quick Links</h3>
+
+            <a href="{{ url_for('main.index') }}">
+                Home
+            </a>
+
+            <a href="{{ url_for('food.menu') }}">
+                Menu
+            </a>
+
+            <a href="{{ url_for('delivery.delivery_page') }}">
+                Delivery
+            </a>
+
+        </div>
+
+
+        <div class="footer-section">
+
+            <h3>Contact</h3>
+
+            <p>📍 1600 Pennsylvania Avenue NW, Washington, DC 20500</p>
+
+            <p>📞 +67 123 456789</p>
+
+            <p>✉️ Tasty_Bytes@gmail.com</p>
+
+        </div>
+
     </div>
 
-    <main>
-        {% block content %}
-        {% endblock %}
-    </main>
 
-    <footer>
-        <div class="footer-container">
-            <div class="footer-section">
-                <h3>Tasty Bytes </h3>
-                <p>Delicious food with one click.</p>
-            </div>
+    <div class="footer-bottom">
 
-            <div class="footer-section">
-                <h3>Quick Links</h3>
-                <a href="{{ url_for('main.index') }}">Home</a>
-                <a href="{{ url_for('food.menu') }}">Menu</a>
-                <a href="{{ url_for('delivery.delivery_page') }}">Delivery</a>
-            </div>
+        <p>
+            © 2026 Tasty Bytes. All rights reserved.
+        </p>
 
-            <div class="footer-section">
-                <h3>Contact</h3>
-                <p>📍 1600 Pennsylvania Avenue NW, Washington, DC 20500</p>
-                <p>📞 +67 123 456789</p>
-                <p>✉️ Tasty_Bytes@gmail.com</p>
-            </div>
-        </div>
+    </div>
 
-        <div class="footer-bottom">
-            <p>© 2026 Tasty Bytes. All rights reserved.</p>
-        </div>
-    </footer>
+</footer>
+
+<!-- JAVASCRIPT -->
+<script
+    src="{{ url_for('static', filename='js/script.js') }}"
+></script>
+
+{% block extra_js %}
+{% endblock %}
+```
+
+</body>
+</html>
 
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
     {% block extra_js %}{% endblock %}
