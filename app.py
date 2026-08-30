@@ -1,11 +1,18 @@
 import os
 from datetime import timedelta
-from flask import Flask, render_template, Blueprint, redirect, url_for, request, flash, session
+from flask import Flask, render_template, Blueprint, redirect, url_for, request, flash, session, jsonify
 from flask_login import LoginManager, current_user, login_user, login_required, logout_user
 from database.restaurant_db import db, FoodItem, User
+from dotenv import load_dotenv
+from groq import Groq
 
 app = Flask(__name__)
-app.config["SECRET_KEY"] = "secret-key"
+
+load_dotenv()
+
+app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "dev-secret-key-change-me")
+
+client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + os.path.join(
@@ -43,14 +50,12 @@ def login():
         password = request.form.get("password")
         user = User.query.filter_by(email=email).first()
 
-        session.permanent = True
-        login_user(user, remember=True)
-
         if not user or not user.check_password(password):
             flash("Invalid email or password.", "danger")
             return redirect(url_for("auth.login"))
 
-        login_user(user)
+        session.permanent = True
+        login_user(user, remember=True)
         flash("Logged in successfully!", "success")
         return redirect(url_for("main.index"))
 
@@ -139,8 +144,62 @@ def delete_food(food_id):
 
 @delivery.route("/")
 def delivery_page():
-    return "Delivery page - coming soon"
+    return render_template("delivery/delivery.html")
 
+
+# =========================
+# AI ASSISTANT
+# =========================
+
+@ai.route("/assistant")
+def assistant():
+    return render_template("ai/assistant.html")
+
+
+@ai.route("/chat", methods=["POST"])
+def chat():
+    data = request.get_json(silent=True) or {}
+    user_message = (data.get("message") or "").strip()
+
+    if not user_message:
+        return jsonify({"error": "Please enter a message."}), 400
+
+    if not os.getenv("GROQ_API_KEY"):
+        return jsonify({
+            "error": "GROQ_API_KEY is missing. Add it to your .env file."
+        }), 500
+
+    try:
+        response = client.chat.completions.create(
+            model="openai/gpt-oss-120b",
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "You are the friendly AI food assistant for Tasty Bytes, "
+                        "an online restaurant. "
+                        "Help users choose food, compare meals, suggest options "
+                        "by budget, and answer restaurant questions. "
+                        "Keep answers concise. Never claim a menu item exists "
+                        "unless it is provided by the website context."
+                    ),
+                },
+                {
+                    "role": "user",
+                    "content": user_message,
+                },
+            ],
+        )
+
+        return jsonify({
+            "response": response.choices[0].message.content
+        })
+
+    
+    except Exception as e:
+        print("GROQ ERROR:", repr(e))
+        return jsonify({"error": str(e)}), 500
+    
 @orders.route("/history")
 def history():
     return "Order history - coming soon"
@@ -238,10 +297,6 @@ def checkout():
     session.modified = True
     flash("🎉 Order placed successfully! Thank you for your purchase.", "success")
     return redirect(url_for("main.index"))
-
-@ai.route("/assistant")
-def assistant():
-    return "AI Assistant - coming soon"
 
 @admin.route("/")
 def dashboard():
