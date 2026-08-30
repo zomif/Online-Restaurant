@@ -1,10 +1,77 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends "base.html" %}
 
-</body>
-</html>
+{% block title %}Tasty Bytes AI Assistant{% endblock %}
+
+{% block content %}
+<section class="assistant-page">
+    <div class="assistant-header">
+        <span class="section-label">PROJECT 46 AI</span>
+        <h1>Your personal food assistant</h1>
+        <p>Tell me what you want to eat and I'll help you choose.</p>
+    </div>
+
+    <div class="chat-container">
+        <div class="chat-header"><div class="ai-avatar">🤖</div><div><h3>Tasty Bytes Assistant</h3><span class="online-status">● Online</span></div></div>
+        <div class="chat-messages" id="chatMessages">
+            <div class="message ai-message">👋 Hi! I'm the Tasty Bytes AI assistant. What are you in the mood for today?</div>
+        </div>
+        <form id="chatForm" class="chat-input">
+            <input type="text" id="messageInput" placeholder="Ask me what you should eat..." autocomplete="off">
+            <button type="submit">Send →</button>
+        </form>
+    </div>
+
+    <div class="suggestions">
+        <button type="button" data-message="I have €10, what should I order?">💰 Something under €10</button>
+        <button type="button" data-message="I want something filling">🍔 Something filling</button>
+        <button type="button" data-message="Recommend me something popular">⭐ Popular food</button>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const chatForm = document.getElementById('chatForm');
+const messageInput = document.getElementById('messageInput');
+const chatMessages = document.getElementById('chatMessages');
+
+function addMessage(text, type, id = '') {
+    const el = document.createElement('div');
+    el.className = `message ${type}-message`;
+    if (id) el.id = id;
+    el.textContent = text;
+    chatMessages.appendChild(el);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+async function sendMessage(message) {
+    if (!message) return;
+    addMessage(message, 'user');
+    messageInput.value = '';
+    addMessage('Thinking...', 'ai', 'thinking');
+
+    try {
+        const response = await fetch('{{ url_for("ai.chat") }}', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({message})
+        });
+        const data = await response.json();
+        document.getElementById('thinking')?.remove();
+        addMessage(data.response || data.error || 'Sorry, something went wrong.', 'ai');
+    } catch (error) {
+        document.getElementById('thinking')?.remove();
+        addMessage('Connection error. Please try again.', 'ai');
+    }
+}
+
+chatForm.addEventListener('submit', (event) => {
+    event.preventDefault();
+    sendMessage(messageInput.value.trim());
+});
+
+document.querySelectorAll('[data-message]').forEach(button => {
+    button.addEventListener('click', () => sendMessage(button.dataset.message));
+});
+</script>
+{% endblock %}
