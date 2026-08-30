@@ -1,17 +1,21 @@
 import os
-from datetime import timedelta
+import time
+import sqlite3
+from dotenv import load_dotenv
+from groq import Groq
+from werkzeug.utils import secure_filename
 from flask import Flask, render_template, Blueprint, redirect, url_for, request, flash, session, jsonify
 from flask_login import LoginManager, current_user, login_user, login_required, logout_user
 from database.restaurant_db import db, FoodItem, User
-from dotenv import load_dotenv
-from groq import Groq
+from flask_wtf.csrf import CSRFProtect
 
 app = Flask(__name__)
 
 load_dotenv()
 
-app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "dev-secret-key-change-me")
+app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "4815030a019b690c80146c93ccbba37544504242f7e019f21be6622a7eefff55")
 
+csrf = CSRFProtect(app)
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -56,6 +60,7 @@ def login():
 
         session.permanent = True
         login_user(user, remember=True)
+
         flash("Logged in successfully!", "success")
         return redirect(url_for("main.index"))
 
@@ -96,9 +101,30 @@ def logout():
     flash("You have been logged out.", "info")
     return redirect(url_for("main.index"))
 
-@auth.route("/profile")
+@app.route('/profile', methods=['GET', 'POST'])
+@login_required
 def profile():
-    return "Profile page - coming soon"
+    if request.method == 'POST':
+        new_email = request.form.get('email')
+        if new_email:
+            current_user.email = new_email
+
+        if 'profile_picture' in request.files:
+            file = request.files['profile_picture']
+            if file and file.filename != '':
+                raw_filename = secure_filename(file.filename)
+                unique_filename = f"{int(time.time())}_{raw_filename}"
+                upload_folder = os.path.join(app.root_path, 'static', 'uploads')
+                os.makedirs(upload_folder, exist_ok=True)
+                file.save(os.path.join(upload_folder, unique_filename))
+                current_user.profile_picture = unique_filename
+
+        db.session.add(current_user)
+        db.session.commit()
+        flash("Profile updated successfully!", "success")
+        return redirect(url_for('profile'))
+
+    return render_template('account/profile.html')
 
 @auth.route('/policy')
 def policy():
@@ -146,17 +172,12 @@ def delete_food(food_id):
 def delivery_page():
     return render_template("delivery/delivery.html")
 
-
-# =========================
-# AI ASSISTANT
-# =========================
-
 @ai.route("/assistant")
 def assistant():
     return render_template("ai/assistant.html")
 
-
 @ai.route("/chat", methods=["POST"])
+@csrf.exempt
 def chat():
     data = request.get_json(silent=True) or {}
     user_message = (data.get("message") or "").strip()
@@ -165,9 +186,7 @@ def chat():
         return jsonify({"error": "Please enter a message."}), 400
 
     if not os.getenv("GROQ_API_KEY"):
-        return jsonify({
-            "error": "GROQ_API_KEY is missing. Add it to your .env file."
-        }), 500
+        return jsonify({"error": "GROQ_API_KEY is missing. Add it to your .env file."}), 500
 
     try:
         response = client.chat.completions.create(
@@ -176,12 +195,19 @@ def chat():
                 {
                     "role": "system",
                     "content": (
-                        "You are the friendly AI food assistant for Tasty Bytes, "
-                        "an online restaurant. "
-                        "Help users choose food, compare meals, suggest options "
-                        "by budget, and answer restaurant questions. "
-                        "Keep answers concise. Never claim a menu item exists "
-                        "unless it is provided by the website context."
+                        "You are the friendly AI food assistant for Tasty Bytes, an online restaurant. "
+                        "Help users choose food, compare meals, suggest options by budget, and answer restaurant questions. "
+                        "Keep answers concise.\n\n"
+                        "Here is our official menu:\n"
+                        "1. Cheeseburger (Burgers) - $8.99\n"
+                        "   Description: Juicy beef patty with cheddar, lettuce, and tomato.\n"
+                        "2. Pepperoni Pizza (Pizza) - $14.50\n"
+                        "   Description: Crispy crust topped with mozzarella and pepperoni.\n"
+                        "3. Ultimate Bacon Cheeseburger (Burgers) - $13.99\n"
+                        "   Description: A thick, juicy flame-grilled beef patty topped with melted cheddar cheese, crispy smoked bacon, fresh crisp lettuce, and a ripe tomato slice, all stacked inside a soft toasted sesame seed bun.\n"
+                        "4. Golden Crispy French Fries with ketchup (Sides) - $4.99\n"
+                        "   Description: Hand-cut, golden-crisp potatoes lightly seasoned with sea salt and served hot. The perfect crunchy companion to any burger or sandwich.\n\n"
+                        "Never recommend or claim an item exists unless it is explicitly listed on this menu texx"
                     ),
                 },
                 {
@@ -190,16 +216,14 @@ def chat():
                 },
             ],
         )
-
         return jsonify({
             "response": response.choices[0].message.content
         })
 
-    
     except Exception as e:
         print("GROQ ERROR:", repr(e))
         return jsonify({"error": str(e)}), 500
-    
+
 @orders.route("/history")
 def history():
     return "Order history - coming soon"
@@ -312,6 +336,17 @@ app.register_blueprint(admin)
 
 with app.app_context():
     db.create_all()
+
+    db_file_path = os.path.join(basedir, "database", "restaurant.db")
+    if os.path.exists(db_file_path):
+        try:
+            conn = sqlite3.connect(db_file_path)
+            cursor = conn.cursor()
+            cursor.execute("ALTER TABLE users ADD COLUMN profile_picture VARCHAR(255);")
+            conn.commit()
+            conn.close()
+        except sqlite3.OperationalError:
+            pass
 
     if not FoodItem.query.first():
         default_items = [
