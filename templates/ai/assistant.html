@@ -2,20 +2,208 @@
 
 {% block title %}Tasty Bytes AI Assistant{% endblock %}
 
+{% block extra_css %}
+<style>
+    .assistant-page-wrapper {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 20px;
+        min-height: calc(100vh - 180px);
+    }
+
+    .assistant-header {
+        text-align: center;
+        margin-bottom: 24px;
+    }
+
+    .assistant-header .section-label {
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        color: #3b82f6;
+        letter-spacing: 1px;
+    }
+
+    .assistant-header h1 {
+        font-size: 28px;
+        color: #ffffff;
+        margin: 8px 0;
+    }
+
+    .assistant-header p {
+        color: #94a3b8;
+        font-size: 14px;
+        margin: 0;
+    }
+
+    .chat-widget-box {
+        width: 100%;
+        max-width: 480px;
+        height: 480px;
+        background-color: #1e293b;
+        color: #f8fafc;
+        border-radius: 16px;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        border: 1px solid #334155;
+    }
+
+    .chat-widget-header {
+        background-color: #0f172a;
+        padding: 14px 16px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        border-bottom: 1px solid #334155;
+    }
+
+    .ai-avatar {
+        width: 36px;
+        height: 36px;
+        background-color: #2563eb;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+    }
+
+    .ai-info h3 {
+        font-size: 15px;
+        font-weight: 600;
+        color: #ffffff;
+        margin: 0;
+    }
+
+    .online-status {
+        font-size: 11px;
+        color: #22c55e;
+    }
+
+    .chat-messages {
+        flex: 1;
+        padding: 16px;
+        background-color: #0f172a;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .message {
+        max-width: 82%;
+        padding: 10px 14px;
+        border-radius: 10px;
+        font-size: 13px;
+        line-height: 1.4;
+        word-wrap: break-word;
+    }
+
+    .message.ai-message {
+        background-color: #1e293b;
+        color: #f8fafc;
+        align-self: flex-start;
+        border-bottom-left-radius: 2px;
+        border: 1px solid #334155;
+    }
+
+    .message.user-message {
+        background-color: #2563eb;
+        color: white;
+        align-self: flex-end;
+        border-bottom-right-radius: 2px;
+    }
+
+    .chat-input-form {
+        display: flex;
+        background-color: #1e293b;
+        border-top: 1px solid #334155;
+        padding: 10px;
+        gap: 8px;
+    }
+
+    .chat-input-form input {
+        flex: 1;
+        background-color: #0f172a;
+        border: 1px solid #334155;
+        border-radius: 8px;
+        padding: 10px 12px;
+        color: white;
+        font-size: 13px;
+        outline: none;
+    }
+
+    .chat-input-form input:focus {
+        border-color: #2563eb;
+    }
+
+    .chat-input-form button {
+        background-color: #2563eb;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 0 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    .chat-input-form button:hover {
+        background-color: #1d4ed8;
+    }
+
+    .suggestions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin-top: 16px;
+        max-width: 480px;
+    }
+
+    .suggestions button {
+        background-color: #1e293b;
+        border: 1px solid #334155;
+        color: #cbd5e1;
+        padding: 8px 12px;
+        border-radius: 8px;
+        font-size: 12px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .suggestions button:hover {
+        border-color: #2563eb;
+        color: white;
+        background-color: rgba(37, 99, 235, 0.1);
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<section class="assistant-page">
+<div class="assistant-page-wrapper">
     <div class="assistant-header">
         <span class="section-label">PROJECT 46 AI</span>
         <h1>Your personal food assistant</h1>
         <p>Tell me what you want to eat and I'll help you choose.</p>
     </div>
 
-    <div class="chat-container">
-        <div class="chat-header"><div class="ai-avatar">🤖</div><div><h3>Tasty Bytes Assistant</h3><span class="online-status">● Online</span></div></div>
+    <div class="chat-widget-box">
+        <div class="chat-widget-header">
+            <div class="ai-avatar">🤖</div>
+            <div class="ai-info">
+                <h3>Tasty Bytes Assistant</h3>
+                <span class="online-status">● Online</span>
+            </div>
+        </div>
         <div class="chat-messages" id="chatMessages">
             <div class="message ai-message">👋 Hi! I'm the Tasty Bytes AI assistant. What are you in the mood for today?</div>
         </div>
-        <form id="chatForm" class="chat-input">
+        <form id="chatForm" class="chat-input-form">
             <input type="text" id="messageInput" placeholder="Ask me what you should eat..." autocomplete="off">
             <button type="submit">Send →</button>
         </form>
@@ -26,7 +214,7 @@
         <button type="button" data-message="I want something filling">🍔 Something filling</button>
         <button type="button" data-message="Recommend me something popular">⭐ Popular food</button>
     </div>
-</section>
+</div>
 {% endblock %}
 
 {% block extra_js %}
@@ -65,10 +253,12 @@ async function sendMessage(message) {
     }
 }
 
-chatForm.addEventListener('submit', (event) => {
-    event.preventDefault();
-    sendMessage(messageInput.value.trim());
-});
+if (chatForm) {
+    chatForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+        sendMessage(messageInput.value.trim());
+    });
+}
 
 document.querySelectorAll('[data-message]').forEach(button => {
     button.addEventListener('click', () => sendMessage(button.dataset.message));
