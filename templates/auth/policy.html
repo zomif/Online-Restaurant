@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Privacy Policy</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <title>Privacy Policy & Terms - Tasty Bytes</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * {
             box-sizing: border-box;
@@ -20,37 +20,119 @@
             align-items: center;
             justify-content: center;
             min-height: 100vh;
-            padding: 1.5rem;
+            padding: 2rem 1rem;
         }
 
         .policy-card {
             background-color: #1e293b;
-            padding: 3rem 2.5rem;
-            border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            padding: 2.5rem;
+            border-radius: 16px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
             width: 100%;
-            max-width: 500px;
+            max-width: 650px;
             border: 1px solid #334155;
-            text-align: center;
+            text-align: left;
         }
 
-        .policy-card h1 {
-            font-size: 2.25rem;
-            font-weight: 600;
-            color: #ffffff;
+        .policy-header {
+            border-bottom: 1px solid #334155;
+            padding-bottom: 1.25rem;
             margin-bottom: 1.5rem;
         }
 
-        .back-link {
-            display: inline-block;
+        .policy-header h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 0.25rem;
+        }
+
+        .policy-header p {
+            font-size: 0.875rem;
+            color: #94a3b8;
+        }
+
+        .policy-body {
+            max-height: 420px;
+            overflow-y: auto;
+            padding-right: 0.75rem;
+        }
+
+        /* Custom scrollbar styling */
+        .policy-body::-webkit-scrollbar {
+            width: 6px;
+        }
+        .policy-body::-webkit-scrollbar-track {
+            background: #0f172a;
+            border-radius: 4px;
+        }
+        .policy-body::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 4px;
+        }
+
+        .intro-text {
+            font-size: 0.95rem;
+            color: #cbd5e1;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+
+        .section {
+            margin-bottom: 1.5rem;
+        }
+
+        .section h2 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #38bdf8;
+            margin-bottom: 0.5rem;
+        }
+
+        .section ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+
+        .section li {
+            font-size: 0.9rem;
+            color: #cbd5e1;
+            line-height: 1.6;
+            margin-bottom: 0.5rem;
+            position: relative;
+            padding-left: 1.25rem;
+        }
+
+        .section li::before {
+            content: "•";
+            color: #38bdf8;
+            font-weight: bold;
+            position: absolute;
+            left: 0;
+        }
+
+        .policy-footer {
+            border-top: 1px solid #334155;
+            padding-top: 1.25rem;
             margin-top: 1.5rem;
-            color: #60a5fa;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #38bdf8;
             text-decoration: none;
             font-size: 0.875rem;
             font-weight: 500;
+            transition: color 0.2s;
         }
 
         .back-link:hover {
+            color: #7dd3fc;
             text-decoration: underline;
         }
     </style>
@@ -58,8 +140,62 @@
 <body>
 
     <div class="policy-card">
-        <h1>there is no policy</h1>
-        <a href="{{ url_for('auth.register') }}" class="back-link">← Go Back</a>
+        <div class="policy-header">
+            <h1>Terms of Service & Privacy</h1>
+            <p>Effective Date: September 5, 2026 | Tasty Bytes Platform</p>
+        </div>
+
+        <div class="policy-body">
+            <p class="intro-text">
+                By creating an account or placing an order on <strong>Tasty Bytes</strong>, you agree to be bound by the following terms and conditions. Please read them carefully before proceeding.
+            </p>
+
+            <div class="section">
+                <h2>1. Account Registration & Security</h2>
+                <ul>
+                    <li>You must provide accurate, current, and complete information during registration.</li>
+                    <li>You are responsible for maintaining the confidentiality of your account credentials and all activities that occur under your account.</li>
+                    <li>Tasty Bytes reserves the right to suspend or terminate accounts containing fraudulent information or violating these terms.</li>
+                </ul>
+            </div>
+
+            <div class="section">
+                <h2>2. Orders, Pricing, and Payments</h2>
+                <ul>
+                    <li>All menu items are subject to availability.</li>
+                    <li>Prices and delivery fees are clearly displayed prior to checkout. Tasty Bytes reserves the right to adjust prices or menu items without prior notice.</li>
+                    <li>Once an order is placed and confirmed, cancellation requests are subject to kitchen preparation status and may not be guaranteed.</li>
+                </ul>
+            </div>
+
+            <div class="section">
+                <h2>3. Content & AI Assistant Disclaimer</h2>
+                <ul>
+                    <li>Nutritional information, ingredient descriptions, and automated recommendations provided by our AI Assistant are for informational purposes only.</li>
+                    <li>If you have severe food allergies or specific dietary restrictions, please verify ingredient details directly with staff prior to ordering.</li>
+                </ul>
+            </div>
+
+            <div class="section">
+                <h2>4. Acceptable Use</h2>
+                <ul>
+                    <li>You agree not to misuse our platform, attempt unauthorized access to our database, or disrupt our ordering system using automated scripts or software.</li>
+                    <li>Abuse of user accounts, order counters, or promotional features may result in immediate account termination.</li>
+                </ul>
+            </div>
+
+            <div class="section">
+                <h2>5. Privacy & Data Collection</h2>
+                <ul>
+                    <li>We collect personal data—including your name, email address, order history, and account preferences—solely to process orders and improve your experience.</li>
+                    <li>We do not sell or rent your personal information to third parties.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="policy-footer">
+            <a href="{{ url_for('auth.register') }}" class="back-link">← Back to Registration</a>
+        </div>
     </div>
 
 </body>
