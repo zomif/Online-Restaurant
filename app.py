@@ -209,6 +209,7 @@ def chat():
                         "3. Ultimate Bacon Cheeseburger (Burgers) - $13.99\n"
                         "   Description: A thick, juicy flame-grilled beef patty topped with melted cheddar cheese, crispy smoked bacon, fresh crisp lettuce, and a ripe tomato slice, all stacked inside a soft toasted sesame seed bun.\n"
                         "4. Golden Crispy French Fries with ketchup (Sides) - $4.99\n"
+                         "   Description: Hand-cut, golden-crisp potatoes lightly seasoned with sea salt and served hot. The perfect crunchy companion to any burger or sandwich"
                         "Never recommend or claim an item exists unless it is explicitly listed on this menu text."
                     ),
                 },
