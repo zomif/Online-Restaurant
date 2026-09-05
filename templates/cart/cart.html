@@ -1,56 +1,255 @@
 {% extends "base.html" %}
 
-{% block title %}Your Cart - Online Restaurant{% endblock %}
+{% block title %}Your Cart - Tasty Bytes{% endblock %}
 
 {% block content %}
-<div style="max-width: 900px; margin: 2rem auto; padding: 0 1rem;">
+<div class="cart-container">
     <h2>Your Shopping Cart</h2>
 
     {% if items %}
-        <div style="background: rgba(255, 255, 255, 0.07); backdrop-filter: blur(5px); padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem;">
+        <div class="cart-box">
+
             {% for entry in items %}
-                <div style="display: flex; align-items: center; justify-content: space-between; padding: 1rem 0; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
-                    <div style="display: flex; align-items: center; gap: 15px;">
+                <div class="cart-row">
+
+                    <div class="cart-item-info">
                         {% if entry.food.image_url %}
-                            <img src="{{ entry.food.image_url }}" alt="{{ entry.food.name }}" style="width: 70px; height: 70px; object-fit: cover; border-radius: 6px;">
+                            <img src="{{ entry.food.image_url }}" alt="{{ entry.food.name }}" class="cart-img">
                         {% endif %}
-                        <div>
-                            <h3 style="margin: 0 0 5px 0;">{{ entry.food.name }}</h3>
-                            <p style="margin: 0; color: #888;">${{ "%.2f"|format(entry.food.price) }} each</p>
+                        <div class="cart-text">
+                            <h3>{{ entry.food.name }}</h3>
+                            <p>${{ "%.2f"|format(entry.food.price) }} each</p>
                         </div>
                     </div>
 
-                    <div style="display: flex; align-items: center; gap: 20px;">
-                        <form action="{{ url_for('orders.update_cart', food_id=entry.food.id) }}" method="POST" style="display: flex; align-items: center; gap: 5px;">
-                            <input type="number" name="quantity" value="{{ entry.quantity }}" min="1" max="10" onchange="this.form.submit()" style="width: 50px; padding: 6px; border-radius: 4px; border: 1px solid #ccc; text-align: center;">
+                    <div class="cart-controls">
+
+                        <form action="{{ url_for('orders.update_cart', food_id=entry.food.id) }}" method="POST" class="cart-form">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                            <label>Qty:</label>
+                            <input type="number" name="quantity" value="{{ entry.quantity }}" min="1" max="10" onchange="this.form.submit()" class="cart-input">
                         </form>
 
-                        <p style="margin: 0; font-weight: bold; width: 80px; text-align: right;">${{ "%.2f"|format(entry.subtotal) }}</p>
+                        <p class="cart-subtotal">${{ "%.2f"|format(entry.subtotal) }}</p>
 
-                        <form action="{{ url_for('orders.remove_from_cart', food_id=entry.food.id) }}" method="POST">
-                            <button type="submit" style="background: #dc3545; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer;">
-                                🗑️
-                            </button>
+                        <form action="{{ url_for('orders.remove_from_cart', food_id=entry.food.id) }}" method="POST" class="cart-form">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                            <button type="submit" class="cart-remove-btn">🗑️ Remove</button>
                         </form>
                     </div>
+
                 </div>
             {% endfor %}
 
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem;">
-                <h3 style="margin: 0;">Total Amount: <span style="color: #28a745;">${{ "%.2f"|format(total) }}</span></h3>
+            <div class="cart-footer">
+                <h3>Total Amount: <span class="cart-total-price">${{ "%.2f"|format(total) }}</span></h3>
 
-                <form action="{{ url_for('orders.checkout') }}" method="POST">
-                    <button type="submit" style="background: #28a745; color: white; border: none; padding: 14px 28px; border-radius: 6px; font-size: 1.1rem; font-weight: bold; cursor: pointer;">
-                        ✅ Complete Order
-                    </button>
+                <form action="{{ url_for('orders.checkout') }}" method="POST" class="cart-checkout-form">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <button type="submit" class="cart-checkout-btn">✅ Complete Order</button>
                 </form>
             </div>
+
         </div>
     {% else %}
-        <div style="text-align: center; padding: 3rem; background: rgba(255, 255, 255, 0.05); border-radius: 8px;">
+        <div class="cart-empty">
             <h3>Your cart is empty.</h3>
-            <a href="{{ url_for('main.index') }}" style="color: #ff9900; font-weight: bold; text-decoration: none;">Explore our menu to add food items!</a>
+            <a href="{{ url_for('main.index') }}">Explore our menu to add food items!</a>
         </div>
     {% endif %}
 </div>
+
+<style>
+.cart-container {
+    max-width: 900px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+    box-sizing: border-box;
+}
+
+.cart-container h2 {
+    font-size: 1.75rem;
+    margin-bottom: 1.5rem;
+}
+
+.cart-box {
+    background: rgba(255, 255, 255, 0.07);
+    backdrop-filter: blur(5px);
+    padding: 1.25rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+    box-sizing: border-box;
+}
+
+.cart-row {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: 1rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    gap: 15px;
+}
+
+.cart-item-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    width: 100%;
+}
+
+.cart-img {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 6px;
+    flex-shrink: 0;
+}
+
+.cart-text {
+    overflow: hidden;
+}
+
+.cart-text h3 {
+    margin: 0 0 4px 0;
+    font-size: 1.1rem;
+    word-break: break-word;
+}
+
+.cart-text p {
+    margin: 0;
+    color: #aaa;
+    font-size: 0.9rem;
+}
+
+.cart-controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.cart-form {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin: 0;
+}
+
+.cart-controls label {
+    font-size: 0.85rem;
+    color: #ccc;
+}
+
+.cart-input {
+    width: 55px;
+    padding: 6px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    text-align: center;
+    background: #222;
+    color: white;
+}
+
+.cart-subtotal {
+    margin: 0;
+    font-weight: bold;
+    color: #28a745;
+    font-size: 1.05rem;
+}
+
+.cart-remove-btn {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.cart-footer {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1.5rem;
+    gap: 15px;
+    text-align: center;
+}
+
+.cart-footer h3 {
+    margin: 0;
+    font-size: 1.25rem;
+}
+
+.cart-total-price {
+    color: #28a745;
+}
+
+.cart-checkout-form {
+    width: 100%;
+    margin: 0;
+}
+
+.cart-checkout-btn {
+    background: #28a745;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 6px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    width: 100%;
+}
+
+.cart-empty {
+    text-align: center;
+    padding: 3rem 1rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+}
+
+.cart-empty h3 {
+    margin-bottom: 10px;
+}
+
+.cart-empty a {
+    color: #ff9900;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+@media (min-width: 768px) {
+    .cart-row {
+        flex-direction: row;
+        align-items: center;
+    }
+
+    .cart-item-info {
+        width: auto;
+    }
+
+    .cart-controls {
+        width: auto;
+        flex-wrap: nowrap;
+    }
+
+    .cart-footer {
+        flex-direction: row;
+        text-align: left;
+    }
+
+    .cart-checkout-form {
+        width: auto;
+    }
+
+    .cart-checkout-btn {
+        width: auto;
+    }
+}
+</style>
 {% endblock %}
