@@ -49,6 +49,23 @@
             font-size: 0.875rem;
         }
 
+        .flash-container {
+            margin-bottom: 1.25rem;
+        }
+
+        .flash-message {
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            text-align: center;
+        }
+
+        .flash-message.error, .flash-message.danger {
+            background-color: rgba(239, 68, 68, 0.15);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
         .form-group {
             margin-bottom: 1.25rem;
         }
@@ -78,35 +95,6 @@
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
         }
 
-        .form-options {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.5rem;
-            font-size: 0.85rem;
-        }
-
-        .remember-me {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            color: #94a3b8;
-            cursor: pointer;
-        }
-
-        .remember-me input {
-            accent-color: #3b82f6;
-        }
-
-        .forgot-password {
-            color: #60a5fa;
-            text-decoration: none;
-        }
-
-        .forgot-password:hover {
-            text-decoration: underline;
-        }
-
         .btn-submit {
             width: 100%;
             padding: 0.75rem;
@@ -118,6 +106,7 @@
             font-weight: 600;
             cursor: pointer;
             transition: background-color 0.2s;
+            margin-top: 0.5rem;
         }
 
         .btn-submit:hover {
@@ -150,7 +139,19 @@
             <p>Please enter your details to sign in</p>
         </div>
 
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-container">
+                    {% for category, message in messages %}
+                        <div class="flash-message {{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
         <form action="{{ url_for('auth.login') }}" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
             <div class="form-group">
                 <label for="email">Email Address</label>
                 <input type="email" id="email" name="email" required>
@@ -165,7 +166,7 @@
         </form>
 
         <div class="signup-link">
-            Don't have an account? <a href="/auth/register">Sign up</a>
+            Don't have an account? <a href="{{ url_for('auth.register') }}">Sign up</a>
         </div>
     </div>
 
