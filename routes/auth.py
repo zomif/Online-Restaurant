@@ -28,7 +28,7 @@ def register():
         }
 
         flash('Account created successfully! Please log in.', 'success')
-        return redirect(url_for('login'))
+        return redirect(url_for('auth.login'))
 
     return render_template('register.html')
 
@@ -49,7 +49,7 @@ def login():
         session['username'] = user['username']
 
         flash('Logged in successfully!', 'success')
-        return redirect(url_for('index'))
+        return redirect(url_for('main.index'))
 
     return render_template('login.html')
 
