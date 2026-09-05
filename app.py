@@ -111,6 +111,13 @@ def profile():
         if 'profile_picture' in request.files:
             file = request.files['profile_picture']
             if file and file.filename != '':
+                allowed_extensions = {'png', 'jpg', 'jpeg', 'webp'}
+                extension = file.filename.rsplit('.', 1)[-1].lower() if '.' in file.filename else ''
+
+                if extension not in allowed_extensions:
+                    flash("Invalid profile picture format. Use PNG, JPG, JPEG, or WEBP.", "danger")
+                    return redirect(url_for('auth.profile'))
+
                 raw_filename = secure_filename(file.filename)
                 unique_filename = f"{int(time.time())}_{raw_filename}"
                 upload_folder = os.path.join(app.root_path, 'static', 'uploads')
