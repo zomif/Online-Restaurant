@@ -1,10 +1,210 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends "base.html" %}
 
-</body>
-</html>
+{% block title %}Order History - Tasty Bytes{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --history-bg-color: #121826;
+        --history-card-bg: #1f293a;
+        --history-text-main: #f3f4f6;
+        --history-text-muted: #9ca3af;
+        --history-primary: #3b82f6;
+        --history-primary-hover: #2563eb;
+        --history-border: #374151;
+        --history-badge-green-bg: rgba(16, 185, 129, 0.2);
+        --history-badge-green-text: #34d399;
+    }
+
+    body {
+        background-color: var(--history-bg-color) !important;
+        color: var(--history-text-main) !important;
+        margin: 0;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .history-container {
+        max-width: 800px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+
+    h1.history-title {
+        font-size: 1.875rem;
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+        color: var(--history-text-main);
+    }
+
+    .order-card {
+        background: var(--history-card-bg);
+        border: 1px solid var(--history-border);
+        border-radius: 12px;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+        overflow: hidden;
+    }
+
+    .order-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1.25rem;
+        background-color: rgba(55, 65, 81, 0.5);
+        border-bottom: 1px solid var(--history-border);
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .order-meta span {
+        display: block;
+        font-size: 0.875rem;
+        color: var(--history-text-muted);
+    }
+
+    .order-meta strong {
+        color: var(--history-text-main);
+        font-weight: 500;
+    }
+
+    .status-badge {
+        background-color: var(--history-badge-green-bg);
+        color: var(--history-badge-green-text);
+        padding: 0.35rem 0.85rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .order-body {
+        padding: 1.25rem;
+    }
+
+    .item-row {
+        display: flex;
+        align-items: center;
+        padding: 1rem 0;
+        border-bottom: 1px solid var(--history-border);
+    }
+
+    .item-row:last-child {
+        border-bottom: none;
+    }
+
+    .item-img {
+        width: 60px;
+        height: 60px;
+        object-fit: cover;
+        border-radius: 8px;
+        margin-right: 1.25rem;
+        background-color: #374151;
+    }
+
+    .item-details {
+        flex-grow: 1;
+    }
+
+    .item-name {
+        font-weight: 600;
+        font-size: 1.1rem;
+        color: var(--history-text-main);
+    }
+
+    .item-qty {
+        font-size: 0.9rem;
+        color: var(--history-text-muted);
+        margin-top: 0.25rem;
+    }
+
+    .item-price {
+        font-weight: 600;
+        font-size: 1.1rem;
+        color: var(--history-text-main);
+    }
+
+    .order-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1.25rem;
+        background-color: rgba(55, 65, 81, 0.3);
+        border-top: 1px solid var(--history-border);
+    }
+
+    .total-price {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--history-text-main);
+    }
+
+    .btn-reorder {
+        background-color: var(--history-primary);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition: background-color 0.2s, transform 0.1s;
+    }
+
+    .btn-reorder:hover {
+        background-color: var(--history-primary-hover);
+    }
+
+    .btn-reorder:active {
+        transform: translateY(1px);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="history-container">
+    <h1 class="history-title">Order History</h1>
+
+    {% if orders %}
+        {% for order in orders %}
+            <div class="order-card" id="order-{{ order.id }}">
+                <div class="order-header">
+                    <div class="order-meta">
+                        <span>Order ID: <strong>#{{ loop.revindex }}</strong></span>
+                        <span>Date: <strong>{{ order.created_at.strftime('%b %d, %Y') if order.created_at else 'Recent' }}</strong></span>
+                    </div>
+                    <span class="status-badge">{{ order.status or 'Pending' }}</span>
+                </div>
+                <div class="order-body">
+                    {% for item in order.items %}
+                        <div class="item-row">
+                            {% if item.food_item and item.food_item.image_url %}
+                                <img src="{{ item.food_item.image_url }}" alt="{{ item.food_item.name }}" class="item-img">
+                            {% else %}
+                                <img src="https://via.placeholder.com/60/374151/f3f4f6" alt="Food Item" class="item-img">
+                            {% endif %}
+                            <div class="item-details">
+                                <div class="item-name">{{ item.food_item.name if item.food_item else 'Item' }}</div>
+                                <div class="item-qty">Qty: {{ item.quantity }}</div>
+                            </div>
+                            <div class="item-price">${{ "%.2f"|format(item.price_at_purchase) }}</div>
+                        </div>
+                    {% endfor %}
+                </div>
+                <div class="order-footer">
+                    <div class="total-price">Total: ${{ "%.2f"|format(order.total_price) }}</div>
+
+                    <form action="{{ url_for('orders.reorder', order_id=order.id) }}" method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        <button type="submit" class="btn-reorder">Order Again</button>
+                    </form>
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <div class="order-card" style="padding: 2rem; text-align: center;">
+            <p style="color: var(--history-text-muted);">You haven't placed any orders yet.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
