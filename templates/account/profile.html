@@ -51,6 +51,12 @@
             margin-bottom: 24px;
         }
 
+        .avatar-upload {
+            position: relative;
+            display: inline-block;
+            cursor: pointer;
+        }
+
         .avatar {
             width: 90px;
             height: 90px;
@@ -65,6 +71,29 @@
 
         .avatar:hover {
             transform: scale(1.05);
+        }
+
+        .avatar-overlay {
+            position: absolute;
+            inset: 0;
+            width: 90px;
+            height: 90px;
+            margin: 0;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.6);
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-size: 12px;
+            font-weight: 600;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .avatar-upload:hover .avatar-overlay {
+            opacity: 1;
         }
 
         .profile-card h2 {
@@ -136,14 +165,15 @@
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
 
         <div class="avatar-container">
-            <label for="pfp-input" style="cursor: pointer;" title="Click to change photo">
-            <img id="pfp-preview"
-                 src="{{ url_for('static', filename='uploads/' + current_user.profile_picture) if current_user and current_user.profile_picture else 'https://via.placeholder.com/90' }}?v={{ range(1, 9999) | random }}"
-                 alt="Profile Picture"
-                 class="avatar"
-                 style="object-fit: cover;">
+            <label for="pfp-input" class="avatar-upload" title="Change profile picture">
+                <img id="pfp-preview"
+                     src="{{ url_for('static', filename='uploads/' + current_user.profile_picture) if current_user and current_user.profile_picture else 'https://via.placeholder.com/90' }}?v={{ range(1, 9999) | random }}"
+                     alt="Profile Picture"
+                     class="avatar"
+                     style="object-fit: cover;">
+                <span class="avatar-overlay">📷 Change</span>
             </label>
-            <input type="file" id="pfp-input" name="profile_picture" accept="image/*" style="display: none;" onchange="previewImage(event)">
+            <input type="file" id="pfp-input" name="profile_picture" accept="image/png,image/jpeg,image/jpg,image/webp" style="display: none;" onchange="previewImage(event)">
             <h2>@{{ current_user.username if current_user else 'Username' }}</h2>
         </div>
 
