@@ -6,7 +6,7 @@ from groq import Groq
 from werkzeug.utils import secure_filename
 from flask import Flask, render_template, Blueprint, redirect, url_for, request, flash, session, jsonify
 from flask_login import LoginManager, current_user, login_user, login_required, logout_user
-from database.restaurant_db import db, FoodItem, User
+from database.restaurant_db import db, FoodItem, User, Order, OrderItem
 from flask_wtf.csrf import CSRFProtect
 
 app = Flask(__name__)
@@ -37,7 +37,6 @@ def load_user(user_id):
 main = Blueprint("main", __name__)
 auth = Blueprint("auth", __name__, url_prefix="/auth")
 food = Blueprint("food", __name__, url_prefix="/food")
-delivery = Blueprint("delivery", __name__, url_prefix="/delivery")
 orders = Blueprint("orders", __name__, url_prefix="/orders")
 ai = Blueprint("ai", __name__, url_prefix="/ai")
 admin = Blueprint("admin", __name__, url_prefix="/admin")
@@ -101,7 +100,7 @@ def logout():
     flash("You have been logged out.", "info")
     return redirect(url_for("main.index"))
 
-@app.route('/profile', methods=['GET', 'POST'])
+@auth.route('/profile', methods=['GET', 'POST'])
 @login_required
 def profile():
     if request.method == 'POST':
@@ -122,7 +121,7 @@ def profile():
         db.session.add(current_user)
         db.session.commit()
         flash("Profile updated successfully!", "success")
-        return redirect(url_for('profile'))
+        return redirect(url_for('auth.profile'))
 
     return render_template('account/profile.html')
 
@@ -168,10 +167,6 @@ def delete_food(food_id):
         flash(f"Deleted '{food_item.name}' successfully!", "info")
     return redirect(url_for("food.add_food"))
 
-@delivery.route("/")
-def delivery_page():
-    return render_template("delivery/delivery.html")
-
 @ai.route("/assistant")
 def assistant():
     return render_template("ai/assistant.html")
@@ -194,20 +189,20 @@ def chat():
             messages=[
                 {
                     "role": "system",
-                     "content": (
-                        "You are the friendly AI food assistant for Tasty Bytes, "
-                        "an online restaurant. "
-                        "Help users choose food, compare meals, suggest options "
-                        "by budget, and answer restaurant questions."
-                        "Keep answers concise. Never claim a menu item exists "
-                        "unless it is provided by the website context."
-                        "Here is the current menu context with approximate calories, ingredients, and prices:"
-                        "- Cheeseburger: Category: Burgers. Price: $8.99. Ingredients: Juicy beef patty with cheddar, lettuce, and tomato. Approximate Calories: 550 kcal."
-                        "- Pepperoni Pizza: Category: Pizza. Price: $14.50. Ingredients: Crispy crust topped with mozzarella and pepperoni. Approximate Calories: 1,200 kcal."
-                        "- sushi: Category: sushi. Price: $10.00. Ingredients: Assorted fresh sushi rolls featuring salmon, tuna, and avocado. Approximate Calories: 400 kcal."
-                        "- Ultimate Bacon Cheeseburger: Category: Burgers. Price: $13.99. Ingredients: A thick, juicy flame-grilled beef patty topped with melted cheddar cheese, crispy smoked bacon, fresh crisp lettuce, and a ripe tomato slice, all stacked inside a soft toasted sesame seed bun. Approximate Calories: 780 kcal."
-                        "- Golden Crispy French Fries with ketchup: Category: Sides. Price: $4.99. Ingredients: Hand-cut, golden-crisp potatoes lightly seasoned with sea salt and served hot with ketchup. ApproximateCalories: 360 kcal."
-                    ),
+                    "content": (
+                        "You are the friendly AI food assistant for Tasty Bytes, an online restaurant. "
+                        "Help users choose food, compare meals, suggest options by budget, and answer restaurant questions. "
+                        "Try to make your answears clear and short and if you cant you can use more text"
+                        "Keep answers concise.\n\n"
+                        "Here is our official menu:\n"
+                        "1. Cheeseburger (Burgers) - $8.99\n"
+                        "   Description: Juicy beef patty with cheddar, lettuce, and tomato.\n"
+                        "2. Pepperoni Pizza (Pizza) - $14.50\n"
+                        "   Description: Crispy crust topped with mozzarella and pepperoni.\n"
+                        "3. Ultimate Bacon Cheeseburger (Burgers) - $13.99\n"
+                        "   Description: A thick, juicy flame-grilled beef patty topped with melted cheddar cheese, crispy smoked bacon, fresh crisp lettuce, and a ripe tomato slice, all stacked inside a soft toasted sesame seed bun.\n"
+                        "4. Golden Crispy French Fries with ketchup (Sides) - $4.99\n"
+                        "Never recommend or claim an item exists unless it is explicitly listed on this menu text."
                     ),
                 },
                 {
@@ -225,8 +220,10 @@ def chat():
         return jsonify({"error": str(e)}), 500
 
 @orders.route("/history")
+@login_required
 def history():
-    return "Order history - coming soon"
+    user_orders = Order.query.filter_by(user_id=current_user.id).order_by(Order.created_at.desc()).all()
+    return render_template("orders/history.html", orders=user_orders)
 
 @orders.route("/cart")
 @login_required
@@ -317,10 +314,58 @@ def checkout():
         flash("Your cart is empty!", "danger")
         return redirect(url_for("orders.cart"))
 
-    session["cart"] = {}
-    session.modified = True
+    new_order = Order(
+        user_id=current_user.id,
+        total_price=0.0,
+        status="Delivered"
+    )
+    db.session.add(new_order)
+    db.session.flush()
+
+    total_price = 0.0
+
+    for food_id_str, quantity in cart.items():
+        food = db.session.get(FoodItem, int(food_id_str))
+        if food:
+            item_price = food.price * quantity
+            total_price += item_price
+
+            order_item = OrderItem(
+                order_id=new_order.id,
+                food_id=food.id,
+                quantity=quantity,
+                price_at_purchase=food.price
+            )
+            db.session.add(order_item)
+
+    new_order.total_price = total_price
+    db.session.commit()
+
+    session.pop("cart", None)
     flash("🎉 Order placed successfully! Thank you for your purchase.", "success")
     return redirect(url_for("main.index"))
+
+@orders.route("/reorder/<int:order_id>", methods=["POST"])
+@login_required
+def reorder(order_id):
+    past_order = Order.query.filter_by(id=order_id, user_id=current_user.id).first()
+
+    if not past_order:
+        flash("Order not found.", "danger")
+        return redirect(url_for("orders.history"))
+
+    cart = session.get("cart", {})
+
+    for item in past_order.items:
+        str_id = str(item.food_id)
+        current_qty = cart.get(str_id, 0)
+        cart[str_id] = min(current_qty + item.quantity, 10)
+
+    session["cart"] = cart
+    session.modified = True
+
+    flash("Items from your past order have been added to your cart!", "success")
+    return redirect(url_for("orders.cart"))
 
 @admin.route("/")
 def dashboard():
@@ -329,7 +374,6 @@ def dashboard():
 app.register_blueprint(main)
 app.register_blueprint(auth)
 app.register_blueprint(food)
-app.register_blueprint(delivery)
 app.register_blueprint(orders)
 app.register_blueprint(ai)
 app.register_blueprint(admin)
