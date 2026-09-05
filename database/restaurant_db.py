@@ -15,12 +15,13 @@ class User(db.Model, UserMixin):
     role = db.Column(db.String(20), default='customer')
     profile_picture = db.Column(db.String(255), nullable=True)
 
+    orders = db.relationship('Order', backref='user', lazy=True)
+
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
-
 
 
 class FoodItem(db.Model):
@@ -35,17 +36,19 @@ class FoodItem(db.Model):
 
     order_items = db.relationship('OrderItem', backref='food_item', lazy=True)
 
+
 class Order(db.Model):
     __tablename__ = 'orders'
 
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     total_price = db.Column(db.Float, nullable=False, default=0.0)
-    status = db.Column(db.String(50), default='Pending')
+    status = db.Column(db.String(50), default='Delivered')
     delivery_address = db.Column(db.String(255), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     items = db.relationship('OrderItem', backref='order', lazy=True, cascade="all, delete-orphan")
+
 
 class OrderItem(db.Model):
     __tablename__ = 'order_items'
