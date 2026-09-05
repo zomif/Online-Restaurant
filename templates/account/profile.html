@@ -132,7 +132,7 @@
 <div class="profile-card">
     <a href="javascript:history.back()" class="back-btn">&larr; Back</a>
 
-        <form action="{{ url_for('profile') }}" method="POST" enctype="multipart/form-data">
+        <form action="{{ url_for('auth.profile') }}" method="POST" enctype="multipart/form-data">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
 
         <div class="avatar-container">
