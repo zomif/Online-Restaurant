@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Menu - Online Restaurant{% endblock %}
+{% block title %}Menu - Tasty Bytes{% endblock %}
 
 {% block content %}
 <div style="max-width: 1200px; margin: 2rem auto; padding: 0 1rem;">
@@ -20,6 +20,7 @@
                 </div>
 
                <form action="{{ url_for('orders.add_to_cart', food_id=item.id) }}" method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                     <button type="submit" style="width: 100%; padding: 10px; background: #ff9900; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">
                         🛒 Add to Cart
                     </button>
